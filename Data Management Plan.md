@@ -13,6 +13,7 @@
 *Is it gathered from experiments? From the literature?*
 *What instruments? How about observations or photos?*
 *[You can delete these prompts when you’re done if you want]*
+To begin our research, we decided to use a dataset called "the 2000s Movie Database". The dataset is described by developer Claudia Cifaldi as part of Kaggle's "The Movies Dataset", which is available on https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset. The chosen dataset is available in the following GitHub repository, https://github.com/cla-cif/movie-DB-2000s.
 
 **2.2 How often will you get new data?**
 *Continuously or just from discrete experiments?*

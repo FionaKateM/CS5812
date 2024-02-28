@@ -149,14 +149,12 @@ for(genre in unique_genres) {
   movies_df[genre] <- sapply(GenreList, function(g) as.integer(genre %in% g))
 }
 
-if(`Sci-Fi` %in% names(movies_df))
-{
-  movies_df <- movies_df %>%
+if ("Sci-Fi" %in% names(movies_df) & !"Sci_Fi" %in% names(movies_df)) {
+movies_df <- movies_df %>%
   rename(
     Sci_Fi = `Sci-Fi`
     )
 }
-
 
 # # Now, to filter movies that are in Comedy including those that are also Action and Drama
 #  comedy_movies <- movies_df[sapply(movies_df$GenreList, function(x) "Comedy" %in% x & "Horror" %in% x), ]
@@ -253,6 +251,38 @@ movies_df_imputed$cluster <- kmeans_result$cluster
 # We can use PCA for this.
 pca_for_plot <- prcomp(numerical_data_scaled)
 plot(pca_for_plot$x[,1:2], col = kmeans_result$cluster, pch = 20, xlab = "PC1", ylab = "PC2")
+
+```
+```{r}
+# Load necessary libraries
+library(plotly)
+
+# Assuming 'data' is your dataframe with movies
+# Replace 'read.csv' with the actual path to your dataset
+data <- movies_df
+
+# Selecting the relevant features for clustering
+features <- data[, c("Duration", "Budget", "Gross_Earnings")]
+
+# Normalize the features
+features_scaled <- scale(features)
+
+# Perform K-Means Clustering
+set.seed(123) # For reproducibility
+clusters <- kmeans(features_scaled, centers = 5) # You can change the number of clusters
+
+# Add cluster assignments to your data
+data$Cluster <- as.factor(clusters$cluster)
+
+# Visualize in 3D plot
+fig <- plot_ly(data, x = ~Duration, y = ~Budget, z = ~Gross_Earnings, color = ~Cluster, colors = c('#BF382A', '#0C4B8E', '#BFC0BF'),
+               marker = list(size = 10, opacity = 0.5), type = "scatter3d", mode = 'markers')
+
+fig <- fig %>% layout(scene = list(xaxis = list(title = 'Duration'),
+                                   yaxis = list(title = 'Budget'),
+                                   zaxis = list(title = 'Gross Earnings')))
+# Display the plot
+fig
 
 ```
 

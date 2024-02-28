@@ -47,7 +47,7 @@ movies_df <- movies_df %>%
      Aspect_Ratio  = Aspect.Ratio,
      Gross_Earnings = Gross.Earnings,
      Reviews_by_Users = Reviews.by.Users,
-     Reviews_by_Crtiics = Reviews.by.Crtiics,
+     Reviews_by_Critics = Reviews.by.Crtiics,
      IMDB_Score = IMDB.Score 
     )
 ```
@@ -82,6 +82,8 @@ movies_df_imputed <- movies_df %>%
   
   # Impute Budget and Gross Earnings with their median values
   Budget = if_else(is.na(Budget), median(Budget, na.rm = TRUE), Budget),
+  Reviews_by_Users = if_else(is.na(Reviews_by_Users), median(Reviews_by_Users, na.rm = TRUE), Reviews_by_Users),
+  Reviews_by_Critics = if_else(is.na(Reviews_by_Critics), median(Reviews_by_Critics, na.rm = TRUE), Reviews_by_Critics),
   
   Gross_Earnings = if_else(is.na(Gross_Earnings),  median(Gross_Earnings, na.rm = TRUE), Gross_Earnings)
   )
@@ -94,6 +96,7 @@ movies_df_imputed <- movies_df_imputed[!is.na(movies_df_imputed$Actor1) | !is.na
 
 na_table <- colSums(is.na(movies_df_imputed))
 na_table
+movies_df <- movies_df_imputed
 ```
 
 ### Consistency
@@ -143,15 +146,17 @@ GenreList <- strsplit(as.character(movies_df$Genres), " ")
 unique_genres <- unique(unlist(GenreList))
 
 for(genre in unique_genres) {
-  movies_df[genre] <- sapply(movies_df$Genres, function(g) as.integer(genre %in% g))
-  cat(paste(genre," = as.factor(",genre,"),",sep = ""))
-  cat("\n")
+  movies_df[genre] <- sapply(GenreList, function(g) as.integer(genre %in% g))
 }
 
-movies_df <- movies_df %>%
+if(`Sci-Fi` %in% names(movies_df))
+{
+  movies_df <- movies_df %>%
   rename(
     Sci_Fi = `Sci-Fi`
     )
+}
+
 
 # # Now, to filter movies that are in Comedy including those that are also Action and Drama
 #  comedy_movies <- movies_df[sapply(movies_df$GenreList, function(x) "Comedy" %in% x & "Horror" %in% x), ]
@@ -215,7 +220,7 @@ sapply(movies_df[,sapply(movies_df, is.numeric)], function(x) boxplot(x, plot = 
 ```
 
 ```{r}
-write_csv(movies_df,file = "movies_clean.csv")
+write_csv(movies_df,file = "movies_imputed.csv")
 ```
 
 1.  **Column Names**: Some column names contain periods (`.`) and are not consistent (e.g., `Content.Rating` instead of `Content_Rating`). The columns `Content_Rating`, `Aspect_Ratio`, `Gross_Earnings`, `Reviews_by_Users`, `Reviews_by_Crtiics`, `IMDB_Score` were standardized.
@@ -224,3 +229,30 @@ write_csv(movies_df,file = "movies_clean.csv")
 4.  **Data Types**: Most columns have the correct data type. Categorical data such as content rating, aspect ratio, language, country as well as the newly created genre columns are converted as factor.
 5.  **Outliers and Anomalies**: We'll need to check for outliers or anomalies in numerical columns (e.g., `Budget`, `Gross.Earnings`, `Duration`).
 6.  **Consistency in Categorical Data**: For columns like `Language`, `Country`, and `Genres`, we should ensure consistency in naming and consider grouping rare categories under a single label if necessary.
+
+```{r}
+# Assuming that movies_df is your cleaned dataset and it's already been loaded into your R environment
+library(cluster)
+
+# Select only numerical columns for clustering
+numerical_data <- movies_df_imputed %>% select_if(is.numeric)
+
+# Standardize the data
+numerical_data_scaled <- scale(numerical_data)
+
+# Perform K-means clustering
+# set.seed(123) # Set seed for reproducibility
+kmeans_result <- kmeans(numerical_data, 3)  # Assuming we want to create 3 clusters
+
+kmeans_result $cluster
+
+# Attach cluster results to the original data
+movies_df_imputed$cluster <- kmeans_result$cluster
+
+# Visualize clusters with a plot, we'll need to reduce dimensions to do so.
+# We can use PCA for this.
+pca_for_plot <- prcomp(numerical_data_scaled)
+plot(pca_for_plot$x[,1:2], col = kmeans_result$cluster, pch = 20, xlab = "PC1", ylab = "PC2")
+
+```
+

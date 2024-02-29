@@ -11,4 +11,4 @@ Updates done:
 Important Notes:
 - I have left the NA. I don't know if this should be imputed or outright deleted, so this needs to be discussed. 
 - I haven't converted the currencies
-- Initially, I tried to assign units ($) to variables 'Budget' and 'Gross_earnings', but you get an RStudio error when you assign a unit/brackets to a variable, so I am fixing this
+- Initially, I tried to assign units '($)' & '(min)' to variables 'Budget' and 'Gross_earnings' & 'Duration' respectively, but you get an RStudio error when you assign a unit/brackets to a variable, so I am fixing this

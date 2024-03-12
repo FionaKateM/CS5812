@@ -2,7 +2,7 @@
 Group coursework
 
 ## Dataset files
-Original dataset: 
+Original dataset: *movies.csv*
 
 Finalised clean dataset: 
 
@@ -10,6 +10,6 @@ Finalised clean dataset:
 
 
 ## Machine Learning models
-SVM - Fiona Morgan: movies_ML_SVM_FM.rmd
+SVM - Fiona Morgan: *movies_ML_SVM_FM.rmd*
 
 ## Deep Learning models

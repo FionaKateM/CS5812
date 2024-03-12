@@ -2,10 +2,10 @@
 
 ## Overview
 
-**Researcher:** 
-**Project title:** 
-**Project duration:** 
-**Project context** (What is the discipline and subject of your research?):
+**Researchers:** Fiona Morgan, ...
+**Project title:** tbc
+**Project duration:** 12 weeks
+**Project context**: CS5812 Group Coursework - Machine Learning & Deep Learning
 
 ## Defining your data/research sources
 

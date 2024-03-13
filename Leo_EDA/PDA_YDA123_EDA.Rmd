@@ -1,0 +1,609 @@
+---
+title: "Untitled"
+author: "leonardo_2368386"
+date: "2024-02-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r}
+#install.packages("readxl")
+#install.packages("plotly")
+library(readxl)
+library(ggplot2)
+library(plotly)
+library(nnet)
+```
+
+```{r}
+movies_DB <- read.csv("movies_clean.csv")
+
+summary(movies_DB)
+
+str(movies_DB)
+```
+
+Simple Barplots of the dependent variables "Director", "Actor1", "Actor2", "Actor3", and
+"Year"
+
+```{r}
+
+#transform numerical type of "Year" variable to categorical
+
+movies_DB$Year <- as.factor(movies_DB$Year)
+
+#categorical plot
+ggplot(movies_DB, aes(Director)) +
+  geom_bar() + labs(title="Barplot of Director",x="Director", y = "freq") + coord_flip()
+ggplot(movies_DB, aes(Actor1)) +
+  geom_bar() + labs(title="Barplot of Actor1",x="Actor1", y = "freq") + coord_flip()
+ggplot(movies_DB, aes(Actor2)) +
+  geom_bar() + labs(title="Barplot of Actor2",x="Actor2", y = "freq") + coord_flip()
+ggplot(movies_DB, aes(Actor3)) +
+  geom_bar() + labs(title="Barplot of Actor3",x="Actor3", y = "freq") + coord_flip()
+ggplot(movies_DB, aes(Year)) +
+  geom_bar() + labs(title="Barplot of Year",x="Year", y = "freq")
+
+#ggplotly(ggp)
+
+print(length(unique(movies_DB$Director)))
+print(length(unique(movies_DB$Actor1)))
+print(length(unique(movies_DB$Actor2)))
+print(length(unique(movies_DB$Actor3)))
+
+```
+
+EDA:
+
+let's check relations, "Director" as the dependent variable
+
+```{r}
+
+# director vs categorical
+
+ggplot(movies_DB, aes(interaction(movies_DB$Year, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs year")
+
+chisq.test(table(movies_DB$Year, movies_DB$Director))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Genres, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs genres")
+
+chisq.test(table(movies_DB$Genres, movies_DB$Director))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Language, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs language")
+
+chisq.test(table(movies_DB$Language, movies_DB$Director))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Country, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs country")
+
+chisq.test(table(movies_DB$Country, movies_DB$Director))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Content_Rating, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs content_rating")
+
+chisq.test(table(movies_DB$Content_Rating, movies_DB$Director))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Actor1, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs Actor1")
+
+chisq.test(table(movies_DB$Actor1, movies_DB$Director))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Actor2, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs Actor2")
+
+chisq.test(table(movies_DB$Actor2, movies_DB$Director))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Actor3, movies_DB$Director))) +
+  geom_bar() + ggtitle("director vs Actor3")
+
+chisq.test(table(movies_DB$Actor3, movies_DB$Director))
+
+```
+
+By looking at the results, we can notice that the plots don't help us with our analysis visualization wise, mostly because of the high number of different values presented in the categorical variables. We can see that the "Director" variable, according to the tests performed, is significantly related to variables such as "Genres" and "Country", while the opposite being shown with the "Year" variable. Many p-values obtained with the Chi-squared test showed a NA result, which means the test is not reliable, possibly because of the existence of many different categories.
+
+```{r}
+
+# director vs numerical
+
+print("Director vs Duration boxplot")
+
+ggplot(data = movies_DB, aes(x = Director, y = Duration)) +
+  geom_boxplot() +
+  labs(x = "Director", y = "Duration") +ggtitle("Director vs Duration boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Duration ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Director vs Aspect_Ratio boxplot")
+
+ggplot(data = movies_DB, aes(x = Director, y = Aspect_Ratio)) +
+  geom_boxplot() +
+  labs(x = "Director", y = "Aspect_Ratio") +ggtitle("Director vs Aspect_Ratio boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Aspect_Ratio ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Director vs Budget boxplot")
+
+ggplot(data = movies_DB, aes(x = Director, y = Budget)) +
+  geom_boxplot() +
+  labs(x = "Director", y = "Budget") +ggtitle("Director vs Budget boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Budget ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Director vs Gross_Earnings boxplot")
+
+ggplot(data = movies_DB, aes(x = Director, y = Gross_Earnings)) +
+  geom_boxplot() +
+  labs(x = "Director", y = "Gross_Earnings") +ggtitle("Director vs Gross_Earnings boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Gross_Earnings ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Director vs Reviews_by_Users boxplot")
+
+ggplot(data = movies_DB, aes(x = Director, y = Reviews_by_Users)) +
+  geom_boxplot() +
+  labs(x = "Director", y = "Reviews_by_Users") +ggtitle("Director vs Reviews_by_Users boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Users ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Director vs Reviews_by_Crtiics boxplot")
+
+ggplot(data = movies_DB, aes(x = Director, y = Reviews_by_Crtiics)) +
+  geom_boxplot() +
+  labs(x = "Director", y = "Reviews_by_Crtiics") +ggtitle("Director vs Reviews_by_Crtiics boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Crtiics ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Director vs IMDB_Score boxplot")
+
+ggplot(data = movies_DB, aes(x = Director, y = IMDB_Score)) +
+  geom_boxplot() +
+  labs(x = "Director", y = "IMDB_Score") +ggtitle("Director vs IMDB_Score boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$IMDB_Score ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+```
+
+By looking at the results, we can see that the "Director" variable presents a significant relation with all the numerical variables. 
+
+Model:
+
+```{r}
+
+director_model <- multinom(Director ~ Genres + Language + Country + Content_Rating + Duration + Aspect_Ratio + Budget + Gross_Earnings + Actor1 + Actor2 + Actor3 + Reviews_by_Users + Reviews_by_Crtiics + IMDB_Score, data = movies_DB)
+
+summary(director_model)
+
+```
+
+This Multinomial Logistic Regression model was done but errors occurred, likely due to the high amount of levels in the dependent variable.
+
+
+let's check relations, "Actor1" as the dependent variable
+
+```{r}
+
+# Actor1 vs categorical
+
+ggplot(movies_DB, aes(interaction(movies_DB$Year, movies_DB$Actor1))) +
+  geom_bar() + ggtitle("Actor1 vs year")
+
+chisq.test(table(movies_DB$Year, movies_DB$Actor1))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Genres, movies_DB$Actor1))) +
+  geom_bar() + ggtitle("Actor1 vs genres")
+
+chisq.test(table(movies_DB$Genres, movies_DB$Actor1))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Language, movies_DB$Actor1))) +
+  geom_bar() + ggtitle("Actor1 vs language")
+
+chisq.test(table(movies_DB$Language, movies_DB$Actor1))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Country, movies_DB$Actor1))) +
+  geom_bar() + ggtitle("Actor1 vs country")
+
+chisq.test(table(movies_DB$Country, movies_DB$Actor1))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Content_Rating, movies_DB$Actor1))) +
+  geom_bar() + ggtitle("Actor1 vs content_rating")
+
+chisq.test(table(movies_DB$Content_Rating, movies_DB$Actor1))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Actor2, movies_DB$Actor1))) +
+  geom_bar() + ggtitle("Actor1 vs Actor2")
+
+chisq.test(table(movies_DB$Actor2, movies_DB$Actor1))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Actor3, movies_DB$Actor1))) +
+  geom_bar() + ggtitle("Actor1 vs Actor3")
+
+chisq.test(table(movies_DB$Actor3, movies_DB$Actor1))
+
+```
+
+By looking at the results, we can notice that the plots don't help us with our analysis visualization wise, mostly because of the high number of different values presented in the categorical variables. We can see that the "Actor2" variable, according to the tests performed, is significantly related to variables such as "Genres", "Country", and "Actor2", while the opposite being shown with the "Year" variable. Many p-values obtained with the Chi-squared test showed a NA result, which means the test is not reliable, possibly because of the existence of many different categories.
+
+
+```{r}
+
+# Actor1 vs numerical
+
+print("Actor1 vs Duration boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor1, y = Duration)) +
+  geom_boxplot() +
+  labs(x = "Actor1", y = "Duration") +ggtitle("Actor1 vs Duration boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Duration ~ movies_DB$Actor1, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor1 vs Aspect_Ratio boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor1, y = Aspect_Ratio)) +
+  geom_boxplot() +
+  labs(x = "Actor1", y = "Aspect_Ratio") +ggtitle("Actor1 vs Aspect_Ratio boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Aspect_Ratio ~ movies_DB$Actor1, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor1 vs Budget boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor1, y = Budget)) +
+  geom_boxplot() +
+  labs(x = "Actor1", y = "Budget") +ggtitle("Actor1 vs Budget boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Budget ~ movies_DB$Actor1, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor1 vs Gross_Earnings boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor1, y = Gross_Earnings)) +
+  geom_boxplot() +
+  labs(x = "Actor1", y = "Gross_Earnings") +ggtitle("Actor1 vs Gross_Earnings boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Gross_Earnings ~ movies_DB$Actor1, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor1 vs Reviews_by_Users boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor1, y = Reviews_by_Users)) +
+  geom_boxplot() +
+  labs(x = "Actor1", y = "Reviews_by_Users") +ggtitle("Actor1 vs Reviews_by_Users boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Users ~ movies_DB$Actor1, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor1 vs Reviews_by_Crtiics boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor1, y = Reviews_by_Crtiics)) +
+  geom_boxplot() +
+  labs(x = "Actor1", y = "Reviews_by_Crtiics") +ggtitle("Actor1 vs Reviews_by_Crtiics boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Crtiics ~ movies_DB$Actor1, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor1 vs IMDB_Score boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor1, y = IMDB_Score)) +
+  geom_boxplot() +
+  labs(x = "Actor1", y = "IMDB_Score") +ggtitle("Actor1 vs IMDB_Score boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$IMDB_Score ~ movies_DB$Actor1, data = movies_DB)) # cant trust because there are too many different directors
+
+```
+
+By looking at the results, we can see that the "Actor1" variable presents a significant relation with all the numerical variables, on the exception of "Gross_Earnings", and "Reviews_by_Users". 
+
+let's check relations, "Actor2" as the dependent variable
+
+```{r}
+
+# Actor2 vs categorical
+
+ggplot(movies_DB, aes(interaction(movies_DB$Year, movies_DB$Actor2))) +
+  geom_bar() + ggtitle("Actor2 vs year")
+
+chisq.test(table(movies_DB$Year, movies_DB$Actor2))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Genres, movies_DB$Actor2))) +
+  geom_bar() + ggtitle("Actor2 vs genres")
+
+chisq.test(table(movies_DB$Genres, movies_DB$Actor2))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Language, movies_DB$Actor2))) +
+  geom_bar() + ggtitle("Actor2 vs language")
+
+chisq.test(table(movies_DB$Language, movies_DB$Actor2))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Country, movies_DB$Actor2))) +
+  geom_bar() + ggtitle("Actor2 vs country")
+
+chisq.test(table(movies_DB$Country, movies_DB$Actor2))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Content_Rating, movies_DB$Actor2))) +
+  geom_bar() + ggtitle("Actor2 vs content_rating")
+
+chisq.test(table(movies_DB$Content_Rating, movies_DB$Actor2))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Actor3, movies_DB$Actor2))) +
+  geom_bar() + ggtitle("Actor2 vs Actor3")
+
+chisq.test(table(movies_DB$Actor3, movies_DB$Actor2))
+
+```
+
+By looking at the results, we can notice that the plots don't help us with our analysis visualization wise, mostly because of the high number of different values presented in the categorical variables. We can see that the "Actor2" variable, according to the tests performed, is significantly related to variables such as "Genres", and "Country", while the opposite being shown with the "Year" variable. Many p-values obtained with the Chi-squared test showed a NA result, which means the test is not reliable, possibly because of the existence of many different categories.
+
+```{r}
+
+# Actor2 vs numerical
+
+print("Actor2 vs Duration boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor2, y = Duration)) +
+  geom_boxplot() +
+  labs(x = "Actor2", y = "Duration") +ggtitle("Actor2 vs Duration boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Duration ~ movies_DB$Actor2, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor2 vs Aspect_Ratio boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor2, y = Aspect_Ratio)) +
+  geom_boxplot() +
+  labs(x = "Actor2", y = "Aspect_Ratio") +ggtitle("Actor2 vs Aspect_Ratio boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Aspect_Ratio ~ movies_DB$Actor2, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor2 vs Budget boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor2, y = Budget)) +
+  geom_boxplot() +
+  labs(x = "Actor2", y = "Budget") +ggtitle("Actor2 vs Budget boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Budget ~ movies_DB$Actor2, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor2 vs Gross_Earnings boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor2, y = Gross_Earnings)) +
+  geom_boxplot() +
+  labs(x = "Actor2", y = "Gross_Earnings") +ggtitle("Actor2 vs Gross_Earnings boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Gross_Earnings ~ movies_DB$Actor2, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor2 vs Reviews_by_Users boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor2, y = Reviews_by_Users)) +
+  geom_boxplot() +
+  labs(x = "Actor2", y = "Reviews_by_Users") +ggtitle("Actor2 vs Reviews_by_Users boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Users ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor2 vs Reviews_by_Crtiics boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor2, y = Reviews_by_Crtiics)) +
+  geom_boxplot() +
+  labs(x = "Actor2", y = "Reviews_by_Crtiics") +ggtitle("Actor2 vs Reviews_by_Crtiics boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Crtiics ~ movies_DB$Actor2, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor2 vs IMDB_Score boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor2, y = IMDB_Score)) +
+  geom_boxplot() +
+  labs(x = "Actor2", y = "IMDB_Score") +ggtitle("Actor2 vs IMDB_Score boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$IMDB_Score ~ movies_DB$Actor2, data = movies_DB)) # cant trust because there are too many different directors
+
+```
+
+By looking at the results, we can see that the "Actor2" variable presents a significant relation with all the numerical variables, on the exception of "Gross_Earnings".
+
+let's check relations, "Actor3" as the dependent variable
+
+```{r}
+
+# Actor3 vs categorical
+
+ggplot(movies_DB, aes(interaction(movies_DB$Year, movies_DB$Actor3))) +
+  geom_bar() + ggtitle("Actor3 vs year")
+
+chisq.test(table(movies_DB$Year, movies_DB$Actor3))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Genres, movies_DB$Actor3))) +
+  geom_bar() + ggtitle("Actor3 vs genres")
+
+chisq.test(table(movies_DB$Genres, movies_DB$Actor3))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Language, movies_DB$Actor3))) +
+  geom_bar() + ggtitle("Actor3 vs language")
+
+chisq.test(table(movies_DB$Language, movies_DB$Actor3))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Country, movies_DB$Actor3))) +
+  geom_bar() + ggtitle("Actor3 vs country")
+
+chisq.test(table(movies_DB$Country, movies_DB$Actor3))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Content_Rating, movies_DB$Actor3))) +
+  geom_bar() + ggtitle("Actor3 vs content_rating")
+
+chisq.test(table(movies_DB$Content_Rating, movies_DB$Actor3))
+
+```
+
+By looking at the results, we can notice that the plots don't help us with our analysis visualization wise, mostly because of the high number of different values presented in the categorical variables. We can see that the "Actor3" variable, according to the tests performed, is insignificantly related to the "Year" variable. Many p-values obtained with the Chi-squared test showed a NA result, which means the test is not reliable, possibly because of the existence of many different categories.
+
+```{r}
+
+# Actor3 vs numerical
+
+print("Actor3 vs Duration boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor3, y = Duration)) +
+  geom_boxplot() +
+  labs(x = "Actor3", y = "Duration") +ggtitle("Actor3 vs Duration boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Duration ~ movies_DB$Actor3, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor3 vs Aspect_Ratio boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor3, y = Aspect_Ratio)) +
+  geom_boxplot() +
+  labs(x = "Actor3", y = "Aspect_Ratio") +ggtitle("Actor3 vs Aspect_Ratio boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Aspect_Ratio ~ movies_DB$Actor3, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor3 vs Budget boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor3, y = Budget)) +
+  geom_boxplot() +
+  labs(x = "Actor3", y = "Budget") +ggtitle("Actor3 vs Budget boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Budget ~ movies_DB$Actor3, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor3 vs Gross_Earnings boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor3, y = Gross_Earnings)) +
+  geom_boxplot() +
+  labs(x = "Actor3", y = "Gross_Earnings") +ggtitle("Actor3 vs Gross_Earnings boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Gross_Earnings ~ movies_DB$Actor3, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor3 vs Reviews_by_Users boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor3, y = Reviews_by_Users)) +
+  geom_boxplot() +
+  labs(x = "Actor3", y = "Reviews_by_Users") +ggtitle("Actor3 vs Reviews_by_Users boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Users ~ movies_DB$Director, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor3 vs Reviews_by_Crtiics boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor3, y = Reviews_by_Crtiics)) +
+  geom_boxplot() +
+  labs(x = "Actor3", y = "Reviews_by_Crtiics") +ggtitle("Actor3 vs Reviews_by_Crtiics boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Crtiics ~ movies_DB$Actor3, data = movies_DB)) # cant trust because there are too many different directors
+
+print("Actor3 vs IMDB_Score boxplot")
+
+ggplot(data = movies_DB, aes(x = Actor3, y = IMDB_Score)) +
+  geom_boxplot() +
+  labs(x = "Actor3", y = "IMDB_Score") +ggtitle("Actor3 vs IMDB_Score boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$IMDB_Score ~ movies_DB$Actor3, data = movies_DB)) # cant trust because there are too many different directors
+
+```
+
+By looking at the results, we can see that the "Actor3" variable presents a significant relation with all the numerical variables, on the exception of "Gross_Earnings".
+
+let's check relations, "Year" as the dependent variable
+
+```{r}
+
+# Year vs categorical
+
+ggplot(movies_DB, aes(interaction(movies_DB$Genres, movies_DB$Year))) +
+  geom_bar() + ggtitle("Year vs genres")
+
+chisq.test(table(movies_DB$Genres, movies_DB$Year))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Language, movies_DB$Year))) +
+  geom_bar() + ggtitle("Year vs language")
+
+chisq.test(table(movies_DB$Language, movies_DB$Year))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Country, movies_DB$Year))) +
+  geom_bar() + ggtitle("Year vs country")
+
+chisq.test(table(movies_DB$Country, movies_DB$Year))
+
+ggplot(movies_DB, aes(interaction(movies_DB$Content_Rating, movies_DB$Year))) +
+  geom_bar() + ggtitle("Year vs content_rating")
+
+chisq.test(table(movies_DB$Content_Rating, movies_DB$Year))
+
+```
+
+By looking at the results, we can notice that the plots don't help us with our analysis visualization wise, mostly because of the high number of different values presented in the categorical variables. We can see that the "Year" variable, according to the tests performed, is not significantly related to the any categorical variable.
+
+```{r}
+
+# Year vs numerical
+
+print("Year vs Duration boxplot")
+
+ggplot(data = movies_DB, aes(x = Year, y = Duration)) +
+  geom_boxplot() +
+  labs(x = "Year", y = "Duration") +ggtitle("Year vs Duration boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Duration ~ movies_DB$Year, data = movies_DB)) 
+print("Year vs Aspect_Ratio boxplot")
+
+ggplot(data = movies_DB, aes(x = Year, y = Aspect_Ratio)) +
+  geom_boxplot() +
+  labs(x = "Year", y = "Aspect_Ratio") +ggtitle("Year vs Aspect_Ratio boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Aspect_Ratio ~ movies_DB$Year, data = movies_DB))
+
+print("Year vs Budget boxplot")
+
+ggplot(data = movies_DB, aes(x = Year, y = Budget)) +
+  geom_boxplot() +
+  labs(x = "Year", y = "Budget") +ggtitle("Year vs Budget boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Budget ~ movies_DB$Year, data = movies_DB)) 
+
+print("Year vs Gross_Earnings boxplot")
+
+ggplot(data = movies_DB, aes(x = Year, y = Gross_Earnings)) +
+  geom_boxplot() +
+  labs(x = "Year", y = "Gross_Earnings") +ggtitle("Year vs Gross_Earnings boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Gross_Earnings ~ movies_DB$Year, data = movies_DB)) 
+
+print("Year vs Reviews_by_Users boxplot")
+
+ggplot(data = movies_DB, aes(x = Year, y = Reviews_by_Users)) +
+  geom_boxplot() +
+  labs(x = "Year", y = "Reviews_by_Users") +ggtitle("Year vs Reviews_by_Users boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Users ~ movies_DB$Director, data = movies_DB)) 
+
+print("Year vs Reviews_by_Crtiics boxplot")
+
+ggplot(data = movies_DB, aes(x = Year, y = Reviews_by_Crtiics)) +
+  geom_boxplot() +
+  labs(x = "Year", y = "Reviews_by_Crtiics") +ggtitle("Year vs Reviews_by_Crtiics boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$Reviews_by_Crtiics ~ movies_DB$Year, data = movies_DB)) 
+
+print("Year vs IMDB_Score boxplot")
+
+ggplot(data = movies_DB, aes(x = Year, y = IMDB_Score)) +
+  geom_boxplot() +
+  labs(x = "Year", y = "IMDB_Score") +ggtitle("Year vs IMDB_Score boxplot") # + theme(axis.text.x = element_text(angle=90)
+
+summary(aov(movies_DB$IMDB_Score ~ movies_DB$Year, data = movies_DB)) 
+```
+
+By looking at the results, we can see that the "Year" variable presents a significant relation with "Reviews_by_Users", "Reviews_by_Crtiics", and "Aspect_Ratio" numerical variables.
+
+Model:
+
+```{r}
+
+Year_model <- multinom(Year ~ Aspect_Ratio + Reviews_by_Users + Reviews_by_Crtiics, data = movies_DB)
+
+summary(Year_model)
+
+```
+
+##odds ratio
+```{r}
+exp(coef(Year_model))
+```
+
+By looking at the results of the model, we can notice that the "Aspect_Ratio" variable heavily affects "Year", when compared to the other significantly related variables.

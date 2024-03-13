@@ -1,0 +1,66 @@
+---
+title: "Reviews study"
+author: "leonardo_2368386"
+date: "2024-03-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+Movies_data <- read.csv("Movies_cleaned_recent.csv")
+
+summary(Movies_data)
+````
+
+#Simple NA cleaning and variable adjustments
+```{r}
+
+na.omit(Movies_data$Reviews_by_Users)
+
+na.omit(Movies_data$Reviews_by_Critics)
+
+Movies_data$Gross_Earnings <- as.numeric(Movies_data$Gross_Earnings)
+
+str(Movies_data)
+
+```
+
+#Reviews_by_Users VS Gross_Earnings
+
+```{r}
+
+plot(log(Movies_data$Reviews_by_Users), Movies_data$Gross_Earnings, main="Reviews_by_Users vs Gross_Earnings relation", xlab="Reviews_by_Users", ylab="Gross_Earnings")
+
+# H0: there isn't a correlation between "Reviews_by_Users" and "Gross_Earnings"
+cor.test(Movies_data$Reviews_by_Users, Movies_data$Gross_Earnings,  method = "spearman") # we use the spearman method when we suspect the relation isn't linear
+
+```
+
+#Reviews_by_Critics VS Gross_Earnings
+```{r}
+
+plot(log(Movies_data$Reviews_by_Critics), Movies_data$Gross_Earnings, main="Reviews_by_Critics vs Gross_Earnings relation", xlab="Reviews_by_Critics", ylab="Gross_Earnings")
+
+# H0: there isn't a correlation between "Reviews_by_Critics" and "Gross_Earnings"
+cor.test(Movies_data$Reviews_by_Critics, Movies_data$Gross_Earnings,  method = "spearman") # we use the spearman method when we suspect the relation isn't linear
+
+```
+
+```{r}
+# Fit linear regression models
+model_GE_RU <- lm(Movies_data$Gross_Earnings ~ Movies_data$Reviews_by_Users, data = Movies_data)
+model_GE_RC <- lm(Movies_data$Gross_Earnings ~ Movies_data$Reviews_by_Critics, data = Movies_data)
+
+# Compare R-squared values
+print("model_GE_RU")
+summary(model_GE_RU)$r.squared
+print("model_GE_RC")
+summary(model_GE_RC)$r.squared
+```

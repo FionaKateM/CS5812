@@ -90,7 +90,7 @@ After EDA and Feature selection,
 -   **Other Columns**: These were excluded during feature selection.
 
 ```{r}
-movies_df_imputed <- read.csv("Movies_cleaned.csv")
+movies_df_imputed <- read.csv("Movies_expert_imputed.csv")
 na_table <- colSums(is.na(movies_df_imputed))
 na_table
 str(movies_df_imputed)

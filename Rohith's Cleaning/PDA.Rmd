@@ -1,0 +1,260 @@
+---
+title: "PDA"
+author: "Rohith Srinivas"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+# Add code here to load all the required libraries with `library()`.  
+# Do not include any `install.package()` for any required packages in this rmd file.
+
+library(tidyverse) # Streamline data manipulation and visualization with a cohesive set of tools.
+library(ggplot2)   # Create customizable plots and charts with the Grammar of Graphics.
+library(plotly)    # Load the 'plotly' library for creating interactive plots.
+library(validate)  # Perform data validation and quality checks for enhanced data integrity.
+library(Hmisc)     # Access advanced data manipulation, imputation and statistical functions for in-depth analysis.
+library(modeest)   # To use mode/mfv
+library(gridExtra) # To use grid arrange
+library(car)       # To use vif()
+if(require(neuralnet) == FALSE){
+  install.packages('neuralnet')
+  library(neuralnet)
+}
+```
+
+# 1. Organise and clean the data
+
+## 1.1 Import Dataset
+
+```{r}
+movies_df <- read.csv("movies.csv",na.strings=c("","NA"))
+```
+
+## 1.2 Data quality analysis plan
+
+```{r}
+# Generate summary statistics for the 'mydf' data frame.
+summary(movies_df)
+```
+
+The dataset has 17 variables (columns) and 2100 observations (rows).
+
+## 1.3 Data quality analysis findings(Initial)
+
+### A) Renaming Columns
+
+```{r}
+movies_df <- movies_df %>% 
+  rename(
+     Content_Rating =  Content.Rating,
+     Aspect_Ratio  = Aspect.Ratio,
+     Gross_Earnings = Gross.Earnings,
+     Reviews_by_Users = Reviews.by.Users,
+     Reviews_by_Critics = Reviews.by.Crtiics,
+     IMDB_Score = IMDB.Score 
+    )
+```
+
+### B) Unique Rows
+
+```{r}
+# Check for any duplicated rows
+duplicate_rows <- movies_df[duplicated(movies_df), ]
+movies_df <- movies_df[!duplicated(movies_df), ]
+```
+
+### C) Removing the languages other than "English","French","German","Spanish" (to avoid currency conversion issues)
+
+```{r}
+movies_df <- movies_df[movies_df$Language %in% c("English","French","German","Spanish"),]
+```
+
+### D) Completeness
+
+```{r}
+# Calculate the count of missing values in each column of 'mydf' and store the results in 'na_table'.
+na_table <- colSums(is.na(movies_df))
+na_table
+#write_csv(movies_df,file = "Movies_cleaned.csv")
+```
+
+The imputation of the missing values are kept on hold until EDA and Feature selection is done.
+
+After EDA and Feature selection,
+
+-   **Budget and Gross earnings**: Ikleel performed expert based imputation for most of the budget and gross earnings. Removing the ones which Ikleel didnt get any info on.
+
+-   **Duration and Reviews by users**: Rohith performed a quick expert based imputation on the remaining missing values after removing rows from previous step.
+
+-   **Other Columns**: These were excluded during feature selection.
+
+```{r}
+movies_df_imputed <- read.csv("Movies_cleaned.csv")
+na_table <- colSums(is.na(movies_df_imputed))
+na_table
+str(movies_df_imputed)
+movies_df_imputed[is.na(movies_df_imputed$Reviews_by_Users),]
+```
+
+```{r}
+movies_df_imputed <- movies_df_imputed %>%
+  filter(!is.na(Budget) & !is.na(Gross_Earnings)) 
+# movies_df_imputed <- movies_df %>%
+#   # Impute Language based on the mode 
+#   mutate(
+#     Language = if_else(is.na(Language), as.character(mfv(Language)), Language),
+# 
+#   # Impute Duration with the mean of Duration
+#   # Duration = if_else(is.na(Duration), mean(Duration, na.rm = TRUE), Duration),
+#   
+#   # Impute Aspect Ratio with the mode of Aspect Ratio
+#   Aspect_Ratio = if_else(is.na(Aspect_Ratio), mfv(Aspect_Ratio), Aspect_Ratio),
+#   
+#   
+#   # Impute Reviews with their median values
+#   Reviews_by_Users = if_else(is.na(Reviews_by_Users), median(Reviews_by_Users, na.rm = TRUE), Reviews_by_Users),
+#   Reviews_by_Critics = if_else(is.na(Reviews_by_Critics), median(Reviews_by_Critics, na.rm = TRUE), Reviews_by_Critics),
+#   
+#   # Impute content rating with not rated (Expert imputation)
+#   Content_Rating = if_else(is.na(Content_Rating), "Not Rated", Content_Rating),
+#   
+#   # Budget and gross earnings need further investigation due to the number if missing value (Expert imputation)
+#   # Actors column might be removed
+#   
+#   )
+# set.seed(4)
+# x <- quantile(movies_df$Duration,na.rm = TRUE, 0.25)
+# y <- quantile(movies_df$Duration,na.rm = TRUE, 0.75)
+# movies_df_imputed[is.na(movies_df_imputed$Duration),"Duration"] <-
+# round(runif(sum(is.na(movies_df_imputed$Duration)),x,y),1)
+# summary(movies_df_imputed $Duration)
+
+```
+
+### E) Consistency
+
+```{r}
+languages <- sort(unique(movies_df_imputed$Language)) 
+languages
+
+countries <-sort(unique(movies_df_imputed$Country))
+countries
+
+movies_df_imputed[movies_df_imputed$Country=="New Line","Country"] <- "USA"
+```
+
+```{r}
+# Define validation rules for the movies dataset
+movies.rules <- validator(
+  OKyear = Year >= 2000 & Year <= 2010,  # Assuming movies can't be before 1900 or in the future
+  OKduration = Duration > 0,  # Duration should be positive
+  OKaspectratio = Aspect_Ratio >= 1.33 & Aspect_Ratio <= 2.40,  # Common aspect ratios
+  OKbudget = Budget > 0,  # Budget should be positive
+  OKgross = Gross_Earnings > 0,  # Gross earnings can not negative
+  OKimdb = IMDB_Score > 0 & IMDB_Score <= 10,  # Valid IMDB score range
+  OKreviewsusers = Reviews_by_Users >= 0,  # Number of user reviews can be zero but not negative
+  OKreviewscritics = Reviews_by_Critiics >= 0,  # Number of critic reviews can be zero but not negative
+  OKcontentrating = is.element(Content_Rating, c("G", "PG", "PG-13", "R", "NC-17", "Not Rated", "Unrated"))  # Valid content ratings
+)
+
+# Perform quality checks on data frame using the 'movies.rules' validation rules
+movies_qual_check <- confront(movies_df_imputed, movies.rules)
+
+# Summarize the quality check results
+summary(movies_qual_check)
+
+# Create a quality check plot.
+plot(movies_qual_check, xlab=" ")
+```
+
+### F) Integrity
+
+```{r}
+# structure of the 'movies_df_imputed' data frame
+str(movies_df_imputed)
+```
+
+```{r}
+# Convert the categorical variables in 'movies_df_imputed' to factors for categorical representation.
+movies_df_imputed <- movies_df_imputed %>%
+  mutate(
+    Budget = as.numeric(Budget),
+    Gross_Earnings = as.numeric(Gross_Earnings),
+    Content_Rating = as.factor(Content_Rating),
+    Language = as.factor(Language),
+    Country = as.factor(Country),
+    Aspect_Ratio = as.factor(Aspect_Ratio)
+  )
+
+# Re-evaluating the structure of the 'movies_df_imputed' data frame
+str(movies_df_imputed)
+
+movies_df_imputed[is.na(movies_df_imputed$Gross_Earnings),]
+```
+
+### G) Accuracy
+
+```{r}
+# Check for outliers
+sapply(movies_df_imputed[,sapply(movies_df_imputed, is.numeric)], function(x) boxplot(x, plot = FALSE)$out)
+```
+
+1.  **Column Names**: Some column names contain periods (`.`) and are not consistent (e.g., `Content.Rating` instead of `Content_Rating`). The columns `Content_Rating`, `Aspect_Ratio`, `Gross_Earnings`, `Reviews_by_Users`, `Reviews_by_Critics`, `IMDB_Score` were standardized.
+2.  **Duplicate Rows**: There were 42 duplicate rows identified and subsequently removed from the dataset.
+3.  **Missing Values**: There are missing values in several columns (e.g., `Content.Rating` and `Duration`). We'll need to decide on a strategy for handling these, such as filling them in with default values or removing rows/columns with too many missing values.
+4.  **Consistency in Categorical Data**: For columns like `Language`, `Country`, and `Genres`, we should ensure consistency in naming and consider grouping rare categories under a single label if necessary. All the languages exist, while there is no such country as New Line. on further investigation, it was found out New Line is actually the production and the country of origin is USA(which has been updated).
+5.  **Outliers and Anomalies**: We'll need to check for outliers or anomalies in numerical columns (e.g., `Budget`, `Gross.Earnings`, `Duration`). All the outliers make sense.
+6.  **Accuracy**: Most columns have the correct data type. Categorical data such as content rating, aspect ratio, language, country are converted as factor.
+
+# 2.EDA Summary
+
+## 2.1 Dua
+
+## 2.2 Fiona
+
+## 2.3 Leo
+
+## 2.4 Ikleel
+
+## 2.5 Final Decision Gross Earnings
+
+1.  **Duration**
+
+2.  **Budget**
+
+3.  **IMDB Score**
+
+4.  **Reviews by Users**
+
+# 3. Data Preparation
+
+## 3.1 Feature Selection
+
+```{r}
+movies_final <- subset(movies_df_imputed, select=c(Title , Duration , Budget , Reviews_by_Users, IMDB_Score , Gross_Earnings ))
+write_csv(movies_final,file = "movies_final.csv")
+```
+
+## 3.2 Holdout
+
+```{r}
+# set random seed
+set.seed(48)
+# create a 70/30 training/test set split
+n_rows <- nrow(movies_final)
+# sample 70% (n_rows * 0.7) indices in the ranges 1:nrows
+training_idx <- sample(n_rows, n_rows * 0.8)
+# filter the data frame with the training indices (and the complement)
+training_movies <- movies_final[training_idx,]
+remaining_movies <- movies_final[-training_idx,]
+
+validation_idx <- sample(n_rows * 0.2, n_rows * 0.2 * 0.5)
+# filter the data frame with the training indices (and the complement)
+validation_movies <- remaining_movies[validation_idx,]
+testing_movies <- remaining_movies[-validation_idx,]
+
+# write_csv(training_movies,file = "training_movies.csv")
+# write_csv(validation_movies,file = "validation_movies.csv")
+# write_csv(testing_movies,file = "testing_movies.csv")
+```

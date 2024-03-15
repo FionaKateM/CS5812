@@ -1,0 +1,298 @@
+---
+title: "EDA-(Budget,Country)"
+output: html_document
+date: "2024-02-26"
+---
+
+```{r}
+# loading all the required libraries with `library()`.  
+
+library(tidyverse) 
+library(ggplot2)   # Create customizable plots and charts with the Grammar of Graphics.
+library(validate)  # Perform data validation and quality checks for enhanced data integrity.
+library(Hmisc)     
+```
+
+# 1. Organise and clean the data
+
+## 1.1 Import Dataset
+
+```{r}
+movies_df <- read.csv("movies_clean.csv",na.strings=c("","NA"))
+```
+
+# 2. EDA Analysis
+```{r}
+summary(movies_df)
+```
+```{r}
+
+#Converting data type of all the genres into factor for ease in finding correlations.
+movies_df$News <- factor(movies_df$News)
+movies_df$Short <- factor(movies_df$Short)
+movies_df$War <- factor(movies_df$War)
+movies_df$Adventure<- factor(movies_df$Adventure)
+movies_df$Animation <- factor(movies_df$Animation)
+movies_df$Comedy <- factor(movies_df$Comedy)
+
+movies_df$Family <- factor(movies_df$Family)
+movies_df$Fantasy<- factor(movies_df$Fantasy)
+movies_df$Sci_Fi <- factor(movies_df$Sci_Fi)
+movies_df$Drama <- factor(movies_df$Drama)
+movies_df$Romance <- factor(movies_df$Romance)
+movies_df$Western <- factor(movies_df$Western)
+movies_df$Crime <- factor(movies_df$Crime)
+movies_df$Thriller <- factor(movies_df$Thriller)
+movies_df$Action <- factor(movies_df$Action)
+movies_df$Horror <- factor(movies_df$Horror)
+movies_df$Music <- factor(movies_df$Music)
+movies_df$Mystery <- factor(movies_df$Mystery)
+
+```
+```{r}
+movies_df$Sport <- factor(movies_df$Sport )
+movies_df$Musical <- factor(movies_df$Musical)
+movies_df$Biography <- factor(movies_df$Biography)
+movies_df$Documentary <- factor(movies_df$Documentary)
+movies_df$History <- factor(movies_df$History)
+
+```
+```{r}
+
+# columns to convert to numeric
+columns_to_convert <- c("Duration", "Budget", "Aspect_Ratio", "Gross_Earnings", "Reviews_by_Users","Reviews_by_Crtiics")
+
+# Convert specified columns to numeric
+movies_df[columns_to_convert] <- lapply(movies_df[columns_to_convert], as.numeric)
+```
+
+## EDA for "Budget"
+### 2.1. Univariate Analysis
+
+```{r}
+#For Budget
+hist(movies_df$Budget,main="Distribution of Budget",xlab="Budget")
+```
+It is skewed to the left due to a huge number of missing values which affects the mean and median values. Hence, we can conclude Budget is not normally distributed. 
+
+## 2.2. Bivariate Analysis
+Budget variable with categorical variables
+```{r}
+
+#  a data frame with all the genres columns
+genre_cols <- c("Adventure","Family","Romance","Western","Music","Crime","Mystery","Sport","Animation","Musical","Biography","Documentary","History","War","Short","News","Comedy", "Action", "Drama", "Horror", "Sci_Fi", "Fantasy", "Thriller") 
+
+genre_budget_df <- movies_df[, c("Budget", genre_cols)]
+
+# Convert binary indicators to factor variables
+genre_budget_df[genre_columns] <- lapply(genre_budget_df[genre_columns], factor)
+
+# Reshape the data from wide to long format for visualization
+genre_budget_long <- tidyr::gather(genre_budget_df, key = "Genre", value = "Indicator", -Budget)
+
+# Plot showing mean budget for different genres
+ggplot(genre_budget_long, aes(x = Genre, y = Budget, fill = Indicator)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Mean Budget for Different Genres",
+       x = "Genre",
+       y = "Mean Budget") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = c("lightblue", "pink")) # Adjust colors as needed
+
+# Bar plot showing mean budget for different languages
+movies_df %>%
+  group_by(Language) %>%
+  summarise(mean_budget = mean(Budget, na.rm = TRUE)) %>%
+  ggplot(aes(x = Language, y = mean_budget)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "Mean Budget for Different Languages")
+
+# Bar plot showing mean budget for different countries
+movies_df %>%
+  group_by(Country) %>%
+  summarise(mean_budget = mean(Budget, na.rm = TRUE)) %>%
+  ggplot(aes(x = Country, y = mean_budget)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "Mean Budget for Different Countries")
+
+# Bar plot showing mean budget for different content ratings
+ggplot(movies_df, aes(x = Content_Rating, y = Budget)) +
+  stat_summary(fun = mean, geom = "bar") +
+  labs(title = "Mean Budget by Content Rating",
+       x = "Content Rating",
+       y = "Mean Budget")
+
+```
+
+-The above graphs indicate that the distribution among our dependent variable "Budget" and independent categorical variables is not normal and also give us an overview of how the budget is distributed across each variable. 
+
+
+-As Budget does not follows a normal distribution we will use Kruskal-Wallis Test for identifying its correlation with the categorical variables
+```{r}
+# Budget vs Content_Rating
+kruskal_result <- kruskal.test(Budget ~ Content_Rating,data=movies_df)
+
+# Print the Kruskal-Wallis test result
+print(kruskal_result)
+```
+As the p-value is < 0.05 we can conclude that there is a significant relation between Budget and Content_Rating.
+
+```{r}
+# # Budget vs Genres
+kruskal_result <- kruskal.test(Budget ~ Genres,data=movies_df)
+
+# Print the Kruskal-Wallis test result
+print(kruskal_result)
+```
+As the p-value is < 0.05 we can conclude that there is a significant relation between Budget and Genres.
+```{r}
+# Budget vs Language
+kruskal_result <- kruskal.test(Budget ~ Language,data=movies_df)
+
+# Print the Kruskal-Wallis test result
+print(kruskal_result)
+```
+As the p-value is < 0.05 we can conclude that there is a significant relation between Budget and Language.
+```{r}
+# # Budget vs Country
+kruskal_result <- kruskal.test(Budget ~ Country,data=movies_df)
+
+# Print the Kruskal-Wallis test result
+print(kruskal_result)
+```
+As the p-value is < 0.05 we can conclude that there is a significant relation between Budget and Country.
+```{r}
+# Budget vs Director
+ kruskal_test <- kruskal.test(Budget ~ Director, movies_df)
+  print(kruskal_test)
+```
+As the p-value is < 0.05 we can conclude that there is a significant relation between Budget and Director. 
+
+```{r}
+
+# # Budget vs Actors
+kruskal_resultA1 <- kruskal.test(Budget ~ Actor1,data=movies_df)
+kruskal_resultA2 <- kruskal.test(Budget ~ Actor2,data=movies_df)
+kruskal_resultA3 <- kruskal.test(Budget ~ Actor3,data=movies_df)
+
+
+# Print the Kruskal-Wallis test result
+print(kruskal_resultA1)
+print(kruskal_resultA2)
+print(kruskal_resultA3)
+
+```
+For Actor 1, As the p-value is < 0.05 we can conclude that there is a significant relation between Budget and Actor 1.
+For Actor2, As the p-value is < 0.05 we can conclude that there is a significant relation between Budget and Actor 2.
+Actor3, Although the p-value is <0.05 we can conclude that there is a significant relation between Budget and Actor3.
+
+## 2.3. Multivariate Analysis
+
+
+```{r}
+# Select only numeric variables and neglect NA values
+numeric_data <- movies_df %>%
+  select_if(~ is.numeric(.))
+
+# Calculate correlation matrix while neglecting NA values
+correlation_matrix <- cor(numeric_data, use = "pairwise.complete.obs")
+
+# View correlation matrix
+print(correlation_matrix)
+```
+## EDA for "Country" Variable
+```{r}
+#For Country
+
+# Count the number of movies produced in each country
+country_counts <- table(movies_df$Country)
+
+# Convert the table to a data frame
+country_counts_df <- as.data.frame(country_counts)
+
+# Sort the data frame by movie counts in descending order
+country_counts_df <- country_counts_df[order(-country_counts_df$Freq), ]
+
+# Plot
+barplot(country_counts_df$Freq, 
+        names.arg = country_counts_df$Var1, 
+        main = "Number of Movies Produced by Country",
+        xlab = "Country", ylab = "Number of Movies",
+        col = "skyblue",
+        las = 2, # Rotate x-axis labels vertically for better readability
+        cex.names = 0.7) # Adjust size of x-axis labels
+
+```
+This plot shows that most of the data we have is from USA. 
+
+```{r}
+#Country vs Year
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$Year)
+print(chi_squared_result)
+
+#Country vs Duration
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$Duration)
+print(chi_squared_result)
+
+#Country vs Aspect_Ratio
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$Aspect_Ratio)
+print(chi_squared_result)
+
+#Country vs Budget
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$Budget)
+print(chi_squared_result)
+
+#Country vs Gross_Earnings
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$Gross_Earnings)
+print(chi_squared_result)
+
+#Country vs Reviews_by_Users
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$Reviews_by_Users)
+print(chi_squared_result)
+
+#Country vs Reviews_by_Crtiics
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$Reviews_by_Crtiics)
+print(chi_squared_result)
+
+#Country vs IMDB_Score
+chi_squared_result <- chisq.test(movies_df$Country, movies_df$IMDB_Score)
+print(chi_squared_result)
+
+```
+The test results of our dependent variable "Country" with other independent numeric variables represent that its dependent on "Duration","Budget" and "IMDB_SCORE". 
+
+```{r}
+#Country vs Genres
+chi2_result <- chisq.test(table(movies_df$Country, movies_df$Genres))
+print(chi2_result)
+
+#Country vs Language
+chi2_result <- chisq.test(table(movies_df$Country,movies_df$Language))
+print(chi2_result)
+
+#Country vs Director
+chi2_result <- chisq.test(table(movies_df$Country,movies_df$Director))
+print(chi2_result)
+
+#Country vs Content_Rating
+chi2_result <- chisq.test(table(movies_df$Country,movies_df$Content_Rating))
+print(chi2_result)
+
+#Country vs Actor1
+chi2_result <- chisq.test(table(movies_df$Country,movies_df$Actor1))
+print(chi2_result)
+
+#Country vs Actor2
+chi2_result <- chisq.test(table(movies_df$Country,movies_df$Actor2))
+print(chi2_result)
+
+#Country vs Actor3
+chi2_result <- chisq.test(table(movies_df$Country,movies_df$Actor3))
+print(chi2_result)
+
+```
+Our test results for our dependent variable "Country" shows that it depends on Genres, director, language, Actor1 and Actor2. The test results for Content_Rating and Actor3 are shows p-value that is NA which is due to missing values for one or more category.
+
+

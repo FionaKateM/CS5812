@@ -1,0 +1,109 @@
+---
+title: "PDA_Genre_EDA"
+output: html_document
+date: "2024-03-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+# install.packages("corrplot")
+library(corrplot)
+```
+
+
+```{r cars}
+movies_df <- read.csv("movies.csv")
+
+movies_df <- movies_df %>% 
+  rename(
+     Content_Rating =  Content.Rating,
+     Aspect_Ratio  = Aspect.Ratio,
+     Gross_Earnings = Gross.Earnings,
+     Reviews_by_Users = Reviews.by.Users,
+     Reviews_by_Critics = Reviews.by.Crtiics,
+     IMDB_Score = IMDB.Score 
+    )
+
+summary(movies_df)
+
+str(movies_df)
+```
+
+One-hot encoding
+```{r}
+genres <- str_split(movies_df$Genres, " ")
+
+unique_genres <- unique(do.call(c, genres))
+unique_genres
+```
+
+```{r}
+for (genre in unique_genres) {
+  string <- str_interp("${genre}")
+  str(string)
+  list <- ifelse(grepl(string, movies_df$Genres), 1, 0)
+  movies_df[,string] <- list
+}
+
+movies_df <- movies_df[,-3]
+movies_df <- movies_df %>% 
+  rename(
+     Sci_Fi =  'Sci-Fi'
+    )
+```
+
+#### Filter just the genres 
+#for a look at the shape of the data and to confirm one-hot encoding has worked as expected
+```{r}
+movies_genre <- movies_df[,17:39]
+```
+
+
+#### Most popular genres
+```{r}
+# sourced from: https://stackoverflow.com/questions/45898505/barplot-from-sums-of-columns-in-data-frame [19/03/2024]
+
+col_sumdata <- data.frame(value=apply(movies_genre,2,sum))
+col_sumdata$key=rownames(col_sumdata)
+
+ggplot(data=col_sumdata, aes(x = reorder(key, -value), y = value, fill=key)) +
+geom_bar(colour="black", stat="identity") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  xlab("Genre") + ylab("Count")
+```
+
+#### Number of genres per film
+
+```{r}
+row_sumdata <- data.frame(value=apply(movies_genre,1,sum))
+
+ggplot(data=row_sumdata, aes(x=value)) + geom_histogram(binwidth = 1, boundary=-0.5, color="darkblue", fill="lightblue") + scale_x_continuous(breaks=1:8)
+```
+
+
+#### How does each genre impact Gross_Earnings and IMDB_Score?
+
+```{r}
+# Gross Earnings
+anova_earnings <- aov(Gross_Earnings ~ Adventure + Comedy + Family + Drama + Romance + Western + Music + Crime + Thriller + Horror + Action + Sci_Fi + Fantasy + Mystery + Sport + Animation + Musical + Biography + Documentary + History + War + Short + News, data = movies_df)
+
+summary(anova_earnings)
+```
+
+```{r}
+# IMDB score
+anova_imdb <- aov(IMDB_Score ~ Adventure + Comedy + Family + Drama + Romance + Western + Music + Crime + Thriller + Horror + Action + Sci_Fi + Fantasy + Mystery + Sport + Animation + Musical + Biography + Documentary + History + War + Short + News, data = movies_df)
+
+summary(anova_imdb)
+```
+
+```{r}
+
+```
+

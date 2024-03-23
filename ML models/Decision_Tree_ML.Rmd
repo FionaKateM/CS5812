@@ -1,0 +1,148 @@
+---
+title: "DecisionTree"
+author: "leonardo_2368386"
+date: "2024-03-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Decision Tree ML method
+
+## Load libraries
+```{r}
+# install the rpart package (if needed) to create the decision tree model
+if(require(rpart) == FALSE){
+  install.packages('rpart')
+  library(rpart)
+}
+# install the tidymodels package (if needed), to evaluate the model's performance
+if(require(tidyverse) == FALSE){
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+```
+
+## 1.Load datasets
+
+```{r}
+
+movies_dataset <- read.csv("movies_final.csv", stringsAsFactors = T)
+
+#70/30 split
+training_movies <- read.csv("training_movies.csv", stringsAsFactors = T)
+
+testing_movies <- read.csv("testing_movies.csv", stringsAsFactors = T)
+
+```
+
+## 2.Data preparation
+
+```{r}
+
+# Removal of the title column
+training_movies <- training_movies[,-1]
+testing_movies <- testing_movies[,-1]
+
+summary(movies_dataset)
+str(movies_dataset)
+
+summary(training_movies)
+str(training_movies)
+
+summary(testing_movies)
+str(testing_movies)
+
+print("number of rows in the training set")
+nrow(training_movies)
+
+print("number of rows in the testing set")
+nrow(testing_movies)
+
+```
+
+## 3.Decision tree model training
+
+```{r}
+
+# Create decision tree model using regression 
+#input variables:
+# -Duration
+# -Budget
+# -Reviews_by_Users
+# -IMDB_Score
+#output variables:
+# -Gross_Earnings
+  
+DT_model <- rpart(Gross_Earnings ~ Duration + 
+             Budget + Reviews_by_Users + IMDB_Score,  
+             method = "anova", data = training_movies)
+
+```
+
+## 4.Model view (Plots)
+
+```{r}
+
+plot(DT_model, uniform = TRUE, 
+          main = "Gross_Earnings Decision  
+                 Tree using Regression") 
+text(DT_model, use.n = TRUE, cex = .7)
+
+print(DT_model)
+
+```
+
+## 5.Decision Tree prediction
+
+```{r}
+
+#prediction of the testing set values
+cat("Predicted value:\n") 
+DT_pred <- predict(DT_model, testing_movies, method = "anova") 
+
+```
+
+## 5.Decision Tree performance evaluation
+
+```{r}
+
+#To evaluate the model's performance we are going to use metrics such as root mean squared error (RMSE) and the R-squared value
+
+# Calculate RMSE and R-squared
+
+# Testing set true "Gross_Earnings" values
+actual_DT_values <- testing_movies$Gross_Earnings
+
+#plot actual values vs predicted values
+plot(actual_DT_values, DT_pred, 
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs. Predicted Values")
+
+abline(0, 1, col = "red")
+
+legend("topleft", legend = "Ideal Fit", col = "red", lty = 1, cex = 0.8)
+
+# Calculate RMSE
+RMSE_value <- rmse(DT_pred, actual_DT_values)
+
+# calculate r-squared
+rsq <- function(x, y) summary(lm(y~x))$r.squared
+r2 <- rsq(DT_pred, actual_DT_values)
+
+# Print the metrics
+cat("RMSE:", RMSE_value, "\n")
+cat("R2:", r2, "\n")
+
+```
+
+  By looking at the results, we can say that the r-squared value obtained shows that approximately 53.15% of the variance in the dependent variable "Gross_Earnings" can be explained by the other independent variables used in the model, which means we got considerably good results with this metric. 
+  On the other hand, the root mean squared error (RMSE) obtained by this model shows a poor performance, as the value is quite high. This can be explained by the weak relationship existent between the variables used in this model, such as the lack of linear relations.
+
+#based on the following sources:
+-https://www.datacamp.com/tutorial/decision-trees-R
+-https://www.geeksforgeeks.org/decision-tree-for-regression-in-r-programming/

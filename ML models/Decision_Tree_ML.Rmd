@@ -18,10 +18,15 @@ if(require(rpart) == FALSE){
   install.packages('rpart')
   library(rpart)
 }
-# install the tidymodels package (if needed), to evaluate the model's performance
-if(require(tidyverse) == FALSE){
-  install.packages("tidyverse")
-  library(tidyverse)
+# install the Metrics package (if needed) to evaluate the model's performance
+if(require(Metrics) == FALSE){
+  install.packages("Metrics")
+  library(Metrics)
+}
+# install caret (if needed) to normalize the data
+if(require(caret) == FALSE){
+  install.packages("caret")
+  library(caret)
 }
 
 ```
@@ -106,16 +111,36 @@ DT_pred <- predict(DT_model, testing_movies, method = "anova")
 
 ```
 
-## 5.Decision Tree performance evaluation
+## 6.Data Normalization
+
+```{r}
+
+# Testing set true "Gross_Earnings" values
+actual_DT_values <- testing_movies$Gross_Earnings
+
+#normalize the data using Min-Max Scaling to a scale of 0 to 1
+
+#actual values normalization
+
+actual_prep <- preProcess(as.data.frame(actual_DT_values), method=c("range"))
+
+norm_actual_DT_values <- predict(actual_prep, as.data.frame(actual_DT_values))
+
+#predicted values normalization
+
+DT_pred_prep <- preProcess(as.data.frame(DT_pred), method=c("range"))
+
+norm_DT_pred <- predict(DT_pred_prep, as.data.frame(DT_pred))
+
+```
+
+## 7.Decision Tree performance evaluation
 
 ```{r}
 
 #To evaluate the model's performance we are going to use metrics such as root mean squared error (RMSE) and the R-squared value
 
 # Calculate RMSE and R-squared
-
-# Testing set true "Gross_Earnings" values
-actual_DT_values <- testing_movies$Gross_Earnings
 
 #plot actual values vs predicted values
 plot(actual_DT_values, DT_pred, 
@@ -128,11 +153,11 @@ abline(0, 1, col = "red")
 legend("topleft", legend = "Ideal Fit", col = "red", lty = 1, cex = 0.8)
 
 # Calculate RMSE
-RMSE_value <- rmse(DT_pred, actual_DT_values)
+RMSE_value <- rmse(norm_DT_pred$DT_pred, norm_actual_DT_values$actual_DT_values)#rmse(DT_pred, actual_DT_values)
 
 # calculate r-squared
 rsq <- function(x, y) summary(lm(y~x))$r.squared
-r2 <- rsq(DT_pred, actual_DT_values)
+r2 <- rsq(norm_DT_pred$DT_pred, norm_actual_DT_values$actual_DT_values)#rsq(DT_pred, actual_DT_values)
 
 # Print the metrics
 cat("RMSE:", RMSE_value, "\n")
@@ -140,9 +165,9 @@ cat("R2:", r2, "\n")
 
 ```
 
-  By looking at the results, we can say that the r-squared value obtained shows that approximately 53.15% of the variance in the dependent variable "Gross_Earnings" can be explained by the other independent variables used in the model, which means we got considerably good results with this metric. 
-  On the other hand, the root mean squared error (RMSE) obtained by this model shows a poor performance, as the value is quite high. This can be explained by the weak relationship existent between the variables used in this model, such as the lack of linear relations.
+  By looking at the results, we can say that the r-squared value obtained shows that approximately 53.15% of the variance in the dependent variable "Gross_Earnings" can be explained by the other independent variables used in the model, and the root mean squared error (RMSE) showed a result value of 0.17. Therefore, we obtained considerably good results with these metrics.
 
 #based on the following sources:
 -https://www.datacamp.com/tutorial/decision-trees-R
 -https://www.geeksforgeeks.org/decision-tree-for-regression-in-r-programming/
+-https://www.digitalocean.com/community/tutorials/normalize-data-in-r

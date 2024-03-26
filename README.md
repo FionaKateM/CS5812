@@ -6,6 +6,9 @@ Original dataset: *movies.csv*
 
 Finalised clean dataset: *movies_final.csv*
 
+## Research Question
+"How can we predict the success of a movie?"
+
 ## EDA
 Content rating, duration, aspect ratio (Ikleel): [*EDA (Content rating, duration, aspect ratio).Rmd*](EDA (Ikleel's part))
 

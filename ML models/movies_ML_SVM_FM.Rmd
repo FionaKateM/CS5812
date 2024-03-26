@@ -16,8 +16,9 @@ Revision: 1.00
 #### 0. load the kernlab and class package
 ```{r}
 library(kernlab) # Used for KSVM - support vector machine training
-library(prospectr) # Used for soft scaling in normalising the data
 library(dplyr) # For the pipe operator
+library(caret) # for scaling
+library(Metrics) # for evaluation
 ```
 
 #### 1. data preparation
@@ -58,13 +59,15 @@ movies_train <- movies_train %>%
 # Check everything looks as expected
 str(movies_test)
 ```
-#### 1.1 Normalise data
+#### 1. Normalise data
 ```{r}
-movies_test_scaled <- as.data.frame(scale(movies_test[,-5], center = FALSE))
-movies_test_scaled$Gross_Earnings <- movies_test$Gross_Earnings
+# 1.1 normalise using min-max scaling
 
-movies_train_scaled <- as.data.frame(scale(movies_train[,-5], center = FALSE))
-movies_train_scaled$Gross_Earnings <- movies_train$Gross_Earnings
+movies_test_prep <- preProcess(as.data.frame(movies_test), method=c("range"))
+movies_test_scaled <- predict(movies_test_prep, as.data.frame(movies_test))
+
+movies_train_prep <- preProcess(as.data.frame(movies_train), method=c("range"))
+movies_train_scaled <- predict(movies_train_prep, as.data.frame(movies_train))
 ```
 
 #### 2. SVM training
@@ -95,8 +98,45 @@ movies_results <- data.frame(
   svm = svm_movies_pred
 )
 
-### 3.4 calculate RMSE values
+### 3.4 calculate RMSE & R^2 values
+
+# RMSE
 movies_svm_rmse <- sqrt(mean((movies_results$actual - movies_results$svm)^2))
 
-movies_svm_rmse
+# r^2
+rsq <- function(x, y) summary(lm(y~x))$r.squared
+r2 <- rsq(movies_results$svm, movies_results$actual)
+
+# Print the metrics
+cat("RMSE:", movies_svm_rmse, "\n")
+cat("R2:", r2, "\n")
+
+### 3.5 Plot actual values vs predicted values
+plot(movies_results$actual, movies_results$svm, 
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs. Predicted Values")
+
+abline(0, 1, col = "red")
+
+legend("topleft", legend = "Ideal Fit", col = "red", lty = 1, cex = 0.8)
+
 ```
+
+
+```{r}
+#To evaluate the model's performance we are going to use metrics such as root mean squared error (RMSE) and the R-squared value
+
+# Calculate RMSE and R-squared
+
+
+# Calculate RMSE
+RMSE_value <- rmse(movies_results$svm, movies_results$actual)#rmse(DT_pred, actual_DT_values)
+
+# calculate r-squared
+rsq <- function(x, y) summary(lm(y~x))$r.squared
+r2 <- rsq(movies_results$svm, movies_results$actual)#rsq(DT_pred, actual_DT_values)
+
+
+```
+

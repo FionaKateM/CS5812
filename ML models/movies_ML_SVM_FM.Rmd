@@ -118,10 +118,12 @@ cat("R2:", r2, "\n")
 
 ```{r}
 # 4.4 Plot actual values vs predicted values
-plot(movies_results$actual, movies_results$svm, 
+plot(movies_results$actual, movies_results$svm, xlim = c(0,1), ylim = c(0,1),
      xlab = "Actual Values", 
      ylab = "Predicted Values", 
-     main = "Actual vs. Predicted Values", pty="s", asp=1, xlim = c(0,1), ylim = c(0,1))
+     main = "Actual vs. Predicted Values", 
+     pty="s",
+     )
 
 # plot(0:1,0:1, asp=1)
 

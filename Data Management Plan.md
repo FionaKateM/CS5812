@@ -37,7 +37,7 @@ GitHub.
 All data in GitHub will also be present on the personal computers of others. 
 
 **4.3 How will you test whether you can restore from your backups?**
-???
+All data stored in the GitHub repository will be downloaded and then tested in a different and new environment (such as a different computer).
 
 **5.1 Who owns the data you generate?**
 It is a publicly available dataset from kaggle with a Public Domain licence. 

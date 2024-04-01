@@ -1,0 +1,218 @@
+---
+title: "PCA for CW"
+output: html_document
+date: "2024-02-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(factoextra)
+library(fpc)
+library(dbscan)
+Movies <- read.csv("movies_final.csv",stringsAsFactors=FALSE)
+View(Movies)
+summary(Movies)
+class(Movies$Gross_Earnings)
+```
+
+#### Principal Component Analysis (PCA) {#Principal_Component_Analysis}
+
+```{r}
+# Selection of numerical variables to use in PCA. The numerical variable we chose as a group : Duration, Budget, Reviews_by_Users, IMDB_Score, Gross_Earnings.
+
+Num_vars <- Movies %>%
+  select(Duration, Budget, Reviews_by_Users, IMDB_Score, Gross_Earnings)
+Num_vars <- na.omit(Num_vars)
+# Summary statistics of the chosen variables
+summary(Num_vars)
+
+# Perform PCA on the Movies dataset
+#   note: variables are centered and scaled before analysis
+PCA_Movies <- prcomp(Num_vars, center = T, scale. = T)
+
+# Inspect the attributes of the PCA object returned by prcomp
+attributes(PCA_Movies)
+```
+
+#### Visual analysis of PCA results {#Visual_analysis_PCA}
+
+```{r}
+# calculate the proportion of explained variance (PEV) from the std values
+PCA_Movies_var <- PCA_Movies$sdev^2
+PCA_Movies_var
+PCA_Movies_PEV <- PCA_Movies_var / sum(PCA_Movies_var)
+PCA_Movies_PEV
+
+# plot the variance per principal component
+#   note: this can be done using the plot function on the prcomp object
+plot(PCA_Movies)
+
+# plot the cumulative value of PEV for increasing number of additional PCs
+#   note: add an 80% threshold line to inform the feature extraction
+#     according to the plot the first 3 PCs should be selected
+opar <- par(no.readonly = TRUE)
+plot(
+  cumsum(PCA_Movies_PEV),
+  ylim = c(0,1),
+  xlab = 'PC',
+  ylab = 'cumulative PEV',
+  pch = 20,
+  col = 'orange'
+)
+abline(h = 0.8, col = 'red', lty = 'dashed')
+par(opar)
+
+# get and inspect the loadings for each PC
+#   note: loadings are reported as a rotation matrix
+PCA_Movies_loadings <- PCA_Movies$rotation
+PCA_Movies_loadings
+
+# plot the loadings for the first three PCs as a barplot
+#   note: two vectors for colours and labels are created for convenience
+opar <- par(no.readonly = TRUE)
+colvector = c('red', 'purple', 'orange', 'green', 'cyan')
+labvector = c('PC1', 'PC2', 'PC3')
+barplot(
+  PCA_Movies_loadings[, c(1:3)],
+  beside = TRUE,
+  yaxt = 'n',
+  names.arg = labvector,
+  col = colvector,
+  ylim = c(-1, 1),
+  border = 'white',
+  ylab = 'Loadings'
+)
+axis(2, seq(-1, 1, 0.1))
+legend(
+  'bottomleft',
+  bty = 'n',
+  col = colvector,
+  pch = 15,
+  legend = row.names(PCA_Movies_loadings)
+)
+par(opar)
+
+# generate a biplot for each pair of important PCs (and show them on separate pages)
+#   NOTE: I don't recommend using these charts as they look cluttered so use the ones below, but I put it here just in case its needed
+opar <- par(no.readonly = TRUE)
+par(mfrow = c(1,2))
+biplot(
+  PCA_Movies,
+  scale = 0,
+  col = c('grey40','orange')
+)
+biplot(
+  PCA_Movies,
+  choices = c(1,3),
+  scale = 0,
+  col = c('grey40','orange')
+)
+biplot(
+  PCA_Movies,
+  choices = c(2,3),
+  scale = 0,
+  col = c('grey40','orange')
+)
+par(opar)
+
+# Don't use the plots on the code section just above this, because they look very cluttered and hard to intepret. So, I used the factoextra package to make the scatterplots much more clearer below
+
+# PC1 vs PC2 PCA biplot
+t <- fviz_pca_biplot(PCA_Movies, geom = "point", axes = c(1, 2), labelsize = 0)+
+  theme_minimal() +  
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  labs(x = "Principal Component 1 (52.2%)", y = "Principal Component 2 (21.8%)") +
+  labs(title = "PCA Biplot: PC1 vs PC2")
+t
+
+# PC1 vs PC3 PCA biplot
+f <- fviz_pca_biplot(PCA_Movies, geom = "point", axes = c(1, 3), labelsize = 0) +
+  theme_minimal() +  
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  labs(x = "Principal Component 1 (52.2%)", y = "Principal Component 3 (12.5%)") +
+  labs(title = "PCA Biplot: PC1 vs PC3")
+f
+
+# PC2 vs PC3 PCA biplot
+q <- fviz_pca_biplot(PCA_Movies, geom = "point", axes = c(2, 3), labelsize = 0)+
+  theme_minimal() +  
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  labs(x = "Principal Component 2 (21.8%)", y = "Principal Component 3 (12.5%)") +
+  labs(title = "PCA Biplot: PC2 vs PC3")
+q
+
+```
+
+![](images/clipboard-3110135989.png)
+
+Note for self: Outline the PC lines on the scatterplot biplots corresponding to the colours on the loadings biplot. Also make them thicker
+
+Dots stil look to big. Also consider changing the lines on the dotted axis lines. Also add more intervals to the grid lines.
+
+```{r}
+str(PCA_Movies)
+PCA_Movies_matrix <- as.matrix(PCA_Movies$x)
+# k=10 was chosen as you can see a vertical spike between ~2.1 - ~2.2.
+kNNdistplot(PCA_Movies_matrix, k=10)
+abline(h = 2.1, lty = 2)
+abline(h = 2.2, lty = 2)
+abline(h=2.15, , lty = 1, col="red")
+```
+
+```{r}
+db_PC1vsPC2 <- dbscan(PCA_Movies_matrix[, c(1, 2)], eps = 2.15, minPts = 10)
+print(db_PC1vsPC2)
+# 1 Cluster which may be ok since we are not really categorising movies, like in iris dataset where we there are  # different cluster which makes sense since there are different species of iris'.
+
+
+db_PC1vsPC2_Plot <- fviz_cluster(db_PC1vsPC2, data = PCA_Movies_matrix[, 1:2], stand = FALSE,
+             ellipse = FALSE, show.clust.cent = FALSE,
+             geom = "point", palette = "jco", ggtheme = theme_classic()) +
+    theme(
+    axis.line.x = element_blank(),  
+    axis.line.y = element_blank(),  
+    axis.ticks = element_blank(),   
+  ) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  geom_vline(xintercept = 0, color = "black", linetype = "dashed")  
+db_PC1vsPC2_Plot
+```
+
+```{r}
+db_PC1vsPC3 <- dbscan(PCA_Movies_matrix[, c(1, 3)], eps = 2.15, minPts = 10)
+print(db_PC1vsPC3)
+
+db_PC1vsPC3_Plot <- fviz_cluster(db_PC1vsPC3, data = PCA_Movies_matrix[, c(1, 3)], stand = FALSE,
+             ellipse = FALSE, show.clust.cent = FALSE,
+             geom = "point",palette = "jco", ggtheme = theme_classic()) +
+    theme(
+    axis.line.x = element_blank(),  
+    axis.line.y = element_blank(),  
+    axis.ticks = element_blank(),   
+  ) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  geom_vline(xintercept = 0, color = "black", linetype = "dashed")  
+db_PC1vsPC3_Plot
+```
+
+```{r}
+db_PC2vsPC3 <- dbscan(PCA_Movies_matrix[, c(2, 3)], eps = 2.15, minPts = 10)
+print(db_PC2vsPC3)
+
+db_PC2vsPC3_Plot <- fviz_cluster(db_PC2vsPC3, data = PCA_Movies_matrix[, c(2, 3)], stand = FALSE,
+             ellipse = FALSE, show.clust.cent = FALSE,
+             geom = "point",palette = "jco", ggtheme = theme_classic()) +
+    theme(
+    axis.line.x = element_blank(),  
+    axis.line.y = element_blank(),  
+    axis.ticks = element_blank(),   
+  ) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  geom_vline(xintercept = 0, color = "black", linetype = "dashed")  
+db_PC2vsPC3_Plot
+```

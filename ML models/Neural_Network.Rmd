@@ -117,7 +117,7 @@ legend(
 )
 ```
 
-#### 6. Decision Tree performance evaluation
+#### 6. Performance evaluation
 
 ```{r}
 

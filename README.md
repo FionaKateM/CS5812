@@ -31,7 +31,7 @@ CNN - Fiona Morgan: [Fiona's Model](DL models/CNN_Movies_Fiona.ipynb)
 
 DANN - Leonardo Pina: [*DANN_movies_Leo.rmd*](DL models/DANN_movies_Leo.Rmd)
 
-ANN - Dua Asghar Mughal: [*ANN_movies_Dua.ipynb*](DL models/ANN_movies_Dua.Rmd)
+ANN - Dua Asghar Mughal: [*ANN_movies_Dua.ipynb*](DL models/ANN_movies_Dua.ipynb)
 
 
 ## Author Contribution Statement

@@ -42,16 +42,16 @@ movies_train <- read.csv("training_movies.csv")
 # inspect the data
 str(movies)
 training_movies<-subset(movies_train, select = -Title)
-testing_movies<-subset(movies_test, select = -Title)
+test_movies<-subset(movies_test, select = -Title)
 
 ```
 #### 3. Data Normalization
 ```{r}
-movies_test_prep <- preProcess(as.data.frame(movies_test), method=c("range"))
-testing_movies_minmax <- predict(movies_test_prep, as.data.frame(movies_test))
+movies_test_prep <- preProcess(as.data.frame(test_movies), method=c("range"))
+test_movies_minmax <- predict(movies_test_prep, as.data.frame(test_movies))
 
-movies_train_prep <- preProcess(as.data.frame(movies_train), method=c("range"))
-training_movies_minmax <- predict(movies_train_prep, as.data.frame(movies_train))
+movies_train_prep <- preProcess(as.data.frame(training_movies), method=c("range"))
+training_movies_minmax <- predict(movies_train_prep, as.data.frame(training_movies))
 ```
 #### 4. Neural network training{#Neural_network_training}
 ```{r}
@@ -95,7 +95,7 @@ cor(gs_results[,'actual'], gs_results[,c("nn_1","nn_4", "nn_44")])
 #   note: points is used to add points on a graph
 plot(
   gs_results$actual,
-  gs_results$nn_1,
+  gs_results$nn_44,
   col = 'blue',
   xlab = 'actual result',
   ylab = 'predicted result',
@@ -110,9 +110,9 @@ points(
 abline(a = 0, b = 1, col = 'red', lty = 'dashed')
 legend(
   'topleft',
-  c('nn_1', 'nn_4'),
+  c('nn_4', 'nn_44'),
   pch = 1,
-  col = c('blue', 'orange'),
+  col = c('orange', 'blue'),
   bty = 'n'
 )
 ```
@@ -146,7 +146,7 @@ cat("RMSE:", RMSE_value_4, "\n")
 cat("R2:", r2_4, "\n")
 # Calculate RMSE
 RMSE_value_44 <- rmse( gs_results$actual,
-  gs_results$nn_1)
+  gs_results$nn_44)
 
 # calculate r-squared 
 r2_44 <- rsq( gs_results$actual,
@@ -160,9 +160,9 @@ cat("R2:", r2_44, "\n")
 ```
 
 I trained three neural networks with different hyper-parameters. As I had 4 independent variables, I choose four neuron per hidden layer in order to train my model. The results that is r-squared value obtained by the performance evaluation of each trained model are as follows:
-1. One Hidden node- 65%
-2. One hidden layer with 4 nodes- 56%
-3. Two hidden layers with 4 nodes each- 62%
+1. One Hidden node- 61%
+2. One hidden layer with 4 nodes- 63%
+3. Two hidden layers with 4 nodes each- 55%
 
-Hence, we can conclude the neural network with one hidden layer was the best among the three for predicting gross earning with accuracy 65%. 
+Hence, we can conclude the neural network with one hidden layer and four neurons was the best among the three for predicting gross earning with accuracy 63%. 
 

@@ -12,38 +12,48 @@ knitr::opts_chunk$set(echo = TRUE)
 # install and load the neuralnet package from CRAN
 if(require(neuralnet) == FALSE){
   install.packages('neuralnet')
+  
+  
 }
+# install the Metrics package (if needed) to evaluate the model's performance
+if(require(Metrics) == FALSE){
+  install.packages("Metrics")
+  library(Metrics)
+  
+}
+
+# install caret (if needed) to normalize the data
+
+  #install.packages("caret")
+  library(caret)
+
 ```
 
 #### 2. Data preparation
 ```{r}
 
 # read the data from the movies.csv file
-movies <- read.csv("movies_final.csv")
+movies_df <- read.csv("movies_final.csv")
+
+### 1.2 load the test and train movies data
+movies_test <- read.csv("testing_movies.csv")
+movies_train <- read.csv("training_movies.csv")
 
 # inspect the data
 str(movies)
-movies_df<-subset(movies, select = -Title)
-set.seed(48)
-# transform the data using a min-max function
-MinMax <- function(x){
-  tx <- (x - min(x)) / (max(x) - min(x))
-  return(tx)
-}
-movies_minmax <- apply(movies_df, 2, MinMax)
+training_movies<-subset(movies_train, select = -Title)
+testing_movies<-subset(movies_test, select = -Title)
 
-movies_minmax <- as.data.frame(movies_minmax)
-
-# create a 70/30 training/test set split
-n_rows <- nrow(movies_minmax)
-# sample 70% (n_rows * 0.7) indices in the ranges 1:nrows
-training_idx <- sample(n_rows, n_rows * 0.7)
-# filter the data frame with the training indices (and the complement)
-training_movies_minmax <- movies_minmax[training_idx,]
-test_movies_minmax <- movies_minmax[-training_idx,]
 ```
+#### 3. Data Normalization
+```{r}
+movies_test_prep <- preProcess(as.data.frame(movies_test), method=c("range"))
+testing_movies_minmax <- predict(movies_test_prep, as.data.frame(movies_test))
 
-#### 3. Neural network training{#Neural_network_training}
+movies_train_prep <- preProcess(as.data.frame(movies_train), method=c("range"))
+training_movies_minmax <- predict(movies_train_prep, as.data.frame(movies_train))
+```
+#### 4. Neural network training{#Neural_network_training}
 ```{r}
 # define a formula for predicting gross_earnings
 grossearning_formula = Gross_Earnings ~ Duration+Budget+Reviews_by_Users+IMDB_Score
@@ -63,7 +73,7 @@ plot(gs_nn_4)
 plot(gs_nn_44)
 ```
 
-#### 4. Neural network prediction{#Neural_network_prediction}
+#### 5. Neural network prediction{#Neural_network_prediction}
 ```{r}
 # compute the prediction for each neural network
 pred_gs_nn_1 <- compute(gs_nn_1, test_movies_minmax[,-5])
@@ -107,10 +117,52 @@ legend(
 )
 ```
 
-I trained three neural networks with different hyper-parameters. As I had 4 independent variables, I choose four neuron per hidden layer in order to train my model. The results obtained by the performance evaluation of each trained model are as follows:
-1. One Hidden node- 79%
-2. One hidden layer with 4 nodes- 82%
-3. Two hidden layers with 4 nodes each- 80%
+#### 6. Decision Tree performance evaluation
 
-Hence, we can conclude the neural network with one hidden layer was the best among the three for predicting gross earning with accuracy 82%. 
+```{r}
+
+# Calculate RMSE
+RMSE_value_1 <- rmse( gs_results$actual,
+  gs_results$nn_1)
+
+# calculate r-squared
+rsq <- function(x, y) summary(lm(y~x))$r.squared
+r2_1 <- rsq( gs_results$actual,
+  gs_results$nn_1)
+
+# Print the metrics for 1 hidden layer
+cat("RMSE:", RMSE_value_1, "\n")
+cat("R2:", r2_1, "\n")
+# Calculate RMSE
+RMSE_value_4 <- rmse( gs_results$actual,
+  gs_results$nn_4)
+
+# calculate r-squared
+r2_4 <- rsq( gs_results$actual,
+  gs_results$nn_4)
+
+# Print the metrics for 4 hidden layers
+cat("RMSE:", RMSE_value_4, "\n")
+cat("R2:", r2_4, "\n")
+# Calculate RMSE
+RMSE_value_44 <- rmse( gs_results$actual,
+  gs_results$nn_1)
+
+# calculate r-squared 
+r2_44 <- rsq( gs_results$actual,
+  gs_results$nn_44)
+
+# Print the metrics for two 4 hidden layers
+cat("RMSE:", RMSE_value_44, "\n")
+cat("R2:", r2_44, "\n")
+
+
+```
+
+I trained three neural networks with different hyper-parameters. As I had 4 independent variables, I choose four neuron per hidden layer in order to train my model. The results that is r-squared value obtained by the performance evaluation of each trained model are as follows:
+1. One Hidden node- 65%
+2. One hidden layer with 4 nodes- 56%
+3. Two hidden layers with 4 nodes each- 62%
+
+Hence, we can conclude the neural network with one hidden layer was the best among the three for predicting gross earning with accuracy 65%. 
 

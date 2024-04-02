@@ -16,6 +16,8 @@ Director, actors, Year (Leo): [*PDA_YDA123_EDA.Rmd*](Leo_EDA/PDA_YDA123_EDA.Rmd)
 
 Genre, Language (Fiona): [*PDA_Genre_EDA.Rmd*](EDA (Fiona))
 
+Country, Budget (Dua): [*EDA.Rmd*](Dua's EDA)
+
 ## Machine Learning models
 SVM - Fiona Morgan: [*movies_ML_SVM_FM.rmd*](ML models/movies_ML_SVM_FM.Rmd)
 

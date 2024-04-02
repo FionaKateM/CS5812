@@ -32,7 +32,7 @@ knitr::opts_chunk$set(echo = TRUE)
 if(require(neuralnet) == FALSE){
   install.packages('neuralnet')
 }
-
+library(tidyverse)
 # Install and load the Metrics package
 if (!require(Metrics)) {
     install.packages("Metrics")
@@ -129,16 +129,17 @@ for (hidden_layers in hidden_layers_list) {
         rmse_value <- rmse(test_mm$Gross_Earnings, predictions)
         
         # Save the results
-        tuning_results <- rbind(tuning_results, data.frame(HiddenLayers = toString(hidden_layers), LearningRate = lr, RMSE = rmse_value, C = cor(test_mm$Gross_Earnings, rescaled_predictions)))
+        tuning_results <- rbind(tuning_results, data.frame(HiddenLayers = toString(hidden_layers), LearningRate = lr, RMSE = rmse_value, C = cor(test_mm$Gross_Earnings, predictions)))
     }
 }
 itr <- itr + 1
 # Review the tuning results to identify the best configuration
 # print(arrange(tuning_results,RMSE))
-write.csv(arrange(tuning_results,RMSE), file = paste("/Users/rohith/Brunel_AI/untitled folder/results/nn_results",itr,".csv"))
+# write.csv(arrange(tuning_results,RMSE), file = paste("/Users/rohith/Brunel_AI/untitled folder/results/nn_results",itr,".csv"))
 #Save top 3 results in final table
 tuning_results_final <- rbind(tuning_results_final,arrange(tuning_results,RMSE)[1:3,])
 }
+print(arrange(tuning_results_final,RMSE))
 ```
 
 nn1 - 79.8 80.9

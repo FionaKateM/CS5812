@@ -31,7 +31,7 @@ As we are going to be comparing the success of multiple models we will need to k
 File names will contain a version number in the format 'v1.01' where the units are big changes and the decimals are smaller updates. 
 
 **4.1  Where will you store your data?**
-GitHub. 
+GitHub. https://github.com/FionaKateM/CS5812
 
 **4.2 How will your data be backed up?**
 All data in GitHub will also be present on the personal computers of others. 

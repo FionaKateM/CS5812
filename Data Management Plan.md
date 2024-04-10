@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Researchers:** Fiona Morgan, ...
+**Researchers:** Fiona Morgan, Leonardo Pina, ...
 **Project title:** tbc
 **Project duration:** 12 weeks
 **Project context**: CS5812 Group Coursework - Machine Learning & Deep Learning

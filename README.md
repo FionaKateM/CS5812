@@ -25,6 +25,8 @@ Decision Tree - Leonardo Pina: [*Decision_Tree_ML.rmd*](ML models/Decision_Tree_
 
 Neural Network - Dua Asghar Mughal: [*Neural_Network.rmd*](ML models/Neural_Network.Rmd)
 
+Random Forest - Ikleel Nabi: [*Random Forest ML.Rmd*](ML models/Random Forest ML.Rmd)
+
 
 ## Deep Learning models
 CNN - Fiona Morgan: [Fiona's Model](DL models/CNN_Movies_Fiona.ipynb)

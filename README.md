@@ -25,6 +25,8 @@ Decision Tree - Leonardo Pina: [*Decision_Tree_ML.rmd*](ML models/Decision_Tree_
 
 Neural Network - Dua Asghar Mughal: [*Neural_Network.rmd*](ML models/Neural_Network.Rmd)
 
+Neural Network - Rohith Srinivas Mohan Kumar: [*ML_Model_NN.Rmd*](ML models/ML_Model_NN.Rmd)
+
 Random Forest - Ikleel Nabi: [*Random Forest ML.Rmd*](ML models/Random Forest ML.Rmd)
 
 
@@ -34,6 +36,8 @@ CNN - Fiona Morgan: [Fiona's Model](DL models/CNN_Movies_Fiona.ipynb)
 DANN - Leonardo Pina: [*DANN_movies_Leo.rmd*](DL models/DANN_movies_Leo.Rmd)
 
 ANN - Dua Asghar Mughal: [*ANN_movies_Dua.ipynb*](DL models/ANN_movies_Dua.ipynb)
+
+CNN - Rohith Srinivas Mohan Kumar: [CNN_Movies_Rohith](DL models/CNN_Movies_Rohith.ipynb)
 
 
 ## Author Contribution Statement

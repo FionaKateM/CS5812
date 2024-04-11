@@ -1,0 +1,112 @@
+---
+title: "Random Forest (Ikleel)"
+output: html_document
+date: "2024-04-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load required packages
+
+```{r}
+if(require(tree) == FALSE){
+  install.packages('tree')
+  library(tree)
+}
+if(require(randomForest) == FALSE){
+  install.packages('randomForest')
+  library(randomForest)
+}
+library(dplyr)
+library(caret)
+library(Metrics)
+```
+
+## 1. Load required datasets
+
+```{r}
+movies_dataset <- read.csv("movies_final.csv", stringsAsFactors = T)
+
+#Training (70%) dataset
+training_movies <- read.csv("training_movies.csv", stringsAsFactors = T)
+#Testing (30%) dataset
+testing_movies <- read.csv("testing_movies.csv", stringsAsFactors = T)
+```
+
+## 1. Data preparation
+
+```{r}
+# Remove unique identifier column 'Title' from both datasets
+if("Title" %in% names(training_movies)) {
+  training_movies <- select(training_movies, -Title)
+}
+if("Title" %in% names(testing_movies)) {
+  testing_movies <- select(testing_movies, -Title)
+}
+
+str(training_movies)
+str(testing_movies)
+```
+
+## 2. Data normalisation
+
+```{r}
+# Normalise the data using min-max scaling to a scale 0 to 1
+
+# Normalise the Gross Earnings in the training data
+GE_norm <- preProcess(training_movies[, "Gross_Earnings", drop = FALSE], method = "range")
+training_movies_scaled <- predict(GE_norm, training_movies)
+testing_movies_scaled <- predict(GE_norm, testing_movies)
+
+# Normalise the remaining predictors
+predictors_prep <- preProcess(training_movies[, !names(training_movies) %in% c("Gross_Earnings")], method = "range")
+training_movies_scaled[-which(names(training_movies_scaled) == "Gross_Earnings")] <- predict(predictors_prep, training_movies[-which(names(training_movies) == "Gross_Earnings")])
+testing_movies_scaled[-which(names(testing_movies_scaled) == "Gross_Earnings")] <- predict(predictors_prep, testing_movies[-which(names(testing_movies) == "Gross_Earnings")])
+```
+
+## 3. Random forest training
+
+```{r}
+# Formula
+RF_formula <- Gross_Earnings ~ Duration + Budget + Reviews_by_Users + IMDB_Score
+
+# Training model
+RF_model <- randomForest(RF_formula, ntree = 500, importance = T, data = training_movies_scaled)
+
+# Plot mean squared error (MSE) of the (regression type) Random Forest model
+plot(RF_model$mse, type = "l", xlab = "Number of Trees", ylab = "Mean Squared Error (MSE)", main = "Random Forest MSE")
+
+# Plot the most important predictors in the Random Forest model
+varImpPlot(RF_model, type = 1, main = "Predictor Importance in Random Forest Model")
+```
+
+## 4. Random forest prediction
+
+```{r}
+# compute the prediction for the random forest model
+RF_pred <- predict(RF_model, testing_movies_scaled)
+```
+
+## 5. Random forest performance evaluation
+
+```{r}
+# Calculate RMSE and R-squared
+RMSE_value <- rmse(RF_pred, testing_movies_scaled$Gross_Earnings)
+r2 <- cor(testing_movies_scaled$Gross_Earnings, RF_pred)^2
+
+# Print the metrics
+cat("RMSE:", RMSE_value, "\n")
+cat("R2:", r2, "\n")
+
+# Plot actual values vs predicted values
+plot(testing_movies_scaled$Gross_Earnings, RF_pred,
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs. Predicted Values for Random Forest")
+
+abline(0, 1, col = "red")
+
+legend("topleft", legend = "Ideal Fit", col = "red", lty = 1, cex = 0.8)
+```

@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Researchers:** Fiona Morgan, Leonardo Pina, Dua Asghar Mughal,...
+**Researchers:** Fiona Morgan, Leonardo Pina, Dua Asghar Mughal, Rohith Srinivas Mohan Kumar,...
 **Project title:** tbc
 **Project duration:** 12 weeks
 **Project context**: CS5812 Group Coursework - Machine Learning & Deep Learning

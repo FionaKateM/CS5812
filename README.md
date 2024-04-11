@@ -37,6 +37,6 @@ ANN - Dua Asghar Mughal: [*ANN_movies_Dua.ipynb*](DL models/ANN_movies_Dua.ipynb
 
 
 ## Author Contribution Statement
-L.P. found the data, R.S. did the data cleaning, I.N., L.P., D.A.M., F.M. and R.S. performed the exploratory data analysis. I.N. implemented the XXX (clustering / PCA)
+L.P. found the data, R.S. did the data cleaning, I.N aided in performing expert/manual-based imputation (from credible sources). I.N., L.P., D.A.M., F.M. and R.S. performed the exploratory data analysis. I.N. implemented the PCA & DBSCAN 
 
 L.P. built the decision tree ML model and the DANN DL model. R.S. built the Neural Network ML model and the CNN DL model. I.N. built the Random Forest ML model and the X DL model. D.A.M. built the Neural Network ML model and the ANN DL model. F.M. built the Support Vector Machine ML model and the CNN DL model. 

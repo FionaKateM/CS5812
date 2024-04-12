@@ -39,6 +39,7 @@ ANN - Dua Asghar Mughal: [*ANN_movies_Dua.ipynb*](DL models/ANN_movies_Dua.ipynb
 
 CNN - Rohith Srinivas Mohan Kumar: [CNN_Movies_Rohith](DL models/CNN_Movies_Rohith.ipynb)
 
+DANN - Ikleel Nabi [*DANN (Ikleel).ipynb*](DL models/DANN (Ikleel).ipynb)
 
 ## Author Contribution Statement
 L.P. found the data, R.S. did the data cleaning, I.N aided in performing expert/manual-based imputation (from credible sources). I.N., L.P., D.A.M., F.M. and R.S. performed the exploratory data analysis. I.N. implemented the PCA & DBSCAN 
